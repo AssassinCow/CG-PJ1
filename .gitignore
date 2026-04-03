@@ -1,0 +1,14 @@
+.codex
+starter1/build/
+starter1/build-wayland/
+starter1/sample_solution/athena/a1
+starter1/sample_solution/mac/a1
+starter1/sample_solution/windows/a1.exe
+starter1/*.out
+starter1/*.obj
+starter1/**/*.o
+starter1/**/*.o.d
+starter1/**/*.a
+starter1/**/a.out
+starter1/**/.DS_Store
+*.swp
