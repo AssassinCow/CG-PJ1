@@ -1,9 +1,20 @@
 .codex
-starter1/build/
-starter1/build-wayland/
+
+# Keep build outputs out of Git by default, but retain the final executable
+# so the submission repository is directly runnable.
+starter1/build/*
+!starter1/build/a1
+
+# Optional Wayland build directory follows the same rule.
+starter1/build-wayland/*
+!starter1/build-wayland/a1
+
+# Provided sample binaries are not part of our submission deliverable.
 starter1/sample_solution/athena/a1
 starter1/sample_solution/mac/a1
 starter1/sample_solution/windows/a1.exe
+
+# Generated result files and intermediate compilation artifacts.
 starter1/*.out
 starter1/*.obj
 starter1/**/*.o
