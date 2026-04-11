@@ -406,11 +406,6 @@ int main(int argc, char** argv)
     loadObjects(argc, argv);
 
     GLFWwindow* window = createOpenGLWindow(600, 600, "Assignment 1");
-    if (!window) {
-        cerr << "failed to create OpenGL window. "
-             << "In WSL, enable WSLg or X11 forwarding to view the interactive window." << endl;
-        return 0;
-    }
 
     // setup the event handlers
     glfwSetKeyCallback(window, keyCallback);

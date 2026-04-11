@@ -26,8 +26,6 @@
 
 - `starter1/src/curve.cpp`
 - `starter1/src/surf.cpp`
-- `starter1/src/main.cpp`
-- `starter1/CMakeLists.txt`
 
 ## 构建方法
 
