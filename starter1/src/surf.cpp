@@ -23,7 +23,7 @@ namespace
 	        return ring * ringSize + sample;
 	    }
 
-	    void addTriangleStripFaces(Surface& surface, unsigned rings, unsigned ringSize)
+	    void addTriangleStripFaces(Surface& surface, unsigned rings, unsigned ringSize, bool flipWinding)
 	    {
 	        for (unsigned r = 0; r + 1 < rings; ++r)
 	        {
@@ -33,8 +33,16 @@ namespace
 	                const unsigned b = vertexIndex(r + 1, i, ringSize);
 	                const unsigned c = vertexIndex(r, i + 1, ringSize);
 	                const unsigned d = vertexIndex(r + 1, i + 1, ringSize);
-	                surface.VF.push_back(Tup3u(a, c, b));
-	                surface.VF.push_back(Tup3u(b, c, d));
+	                if (flipWinding)
+	                {
+	                    surface.VF.push_back(Tup3u(a, b, c));
+	                    surface.VF.push_back(Tup3u(b, d, c));
+	                }
+	                else
+	                {
+	                    surface.VF.push_back(Tup3u(a, c, b));
+	                    surface.VF.push_back(Tup3u(b, c, d));
+	                }
 	            }
 	        }
 	    }
@@ -94,7 +102,7 @@ Surface makeSurfRev(const Curve &profile, unsigned steps)
         }
     }
 
-    addTriangleStripFaces(surface, rings, ringSize);
+    addTriangleStripFaces(surface, rings, ringSize, false);
     return surface;
 }
 
@@ -119,11 +127,11 @@ Surface makeGenCyl(const Curve &profile, const Curve &sweep )
         for (unsigned i = 0; i < ringSize; ++i)
         {
             surface.VV.push_back(sweep[r].V + rotation * profile[i].V);
-            surface.VN.push_back((rotation * profile[i].N).normalized());
+            surface.VN.push_back((rotation * (-profile[i].N)).normalized());
         }
     }
 
-    addTriangleStripFaces(surface, rings, ringSize);
+    addTriangleStripFaces(surface, rings, ringSize, true);
     return surface;
 }
 
