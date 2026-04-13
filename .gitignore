@@ -11,4 +11,3 @@ starter1/**/*.o.d
 starter1/**/*.a
 starter1/**/a.out
 starter1/**/.DS_Store
-*.swp
