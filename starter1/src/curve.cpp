@@ -14,159 +14,6 @@ inline bool approx(const Vector3f& lhs, const Vector3f& rhs)
 	return (lhs - rhs).absSquared() < eps;
 }
 
-inline bool isNearlyZero(const Vector3f& v)
-{
-	return v.absSquared() < 1e-12f;
-}
-
-inline Vector3f safeNormalized(const Vector3f& v)
-{
-	if (isNearlyZero(v))
-	{
-		return Vector3f(0, 0, 0);
-	}
-	return v.normalized();
-}
-
-inline bool isFlatXY(const vector<Vector3f>& points)
-{
-	for (size_t i = 0; i < points.size(); ++i)
-	{
-		if (fabs(points[i][2]) > 1e-6f)
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-inline Vector3f chooseInitialBinormal(const Vector3f& tangent)
-{
-	Vector3f axis = Vector3f::cross(Vector3f(0, 0, 1), tangent);
-	if (isNearlyZero(axis))
-	{
-		axis = Vector3f::cross(Vector3f(0, 1, 0), tangent);
-	}
-	if (isNearlyZero(axis))
-	{
-		axis = Vector3f::cross(Vector3f(1, 0, 0), tangent);
-	}
-	return axis.normalized();
-}
-
-inline float clampDot(float x)
-{
-	return max(-1.0f, min(1.0f, x));
-}
-
-inline float signedAngleAroundAxis(const Vector3f& from, const Vector3f& to, const Vector3f& axis)
-{
-	return atan2(Vector3f::dot(axis, Vector3f::cross(from, to)), clampDot(Vector3f::dot(from, to)));
-}
-
-inline void rotateFrameAroundTangent(CurvePoint& cp, float theta)
-{
-	const float c = cos(theta);
-	const float s = sin(theta);
-	const Vector3f rotatedN = (c * cp.N + s * cp.B).normalized();
-	const Vector3f rotatedB = Vector3f::cross(cp.T, rotatedN).normalized();
-	cp.N = rotatedN;
-	cp.B = rotatedB;
-}
-
-void buildFrames(Curve& curve, bool forcePlanarFrames)
-{
-	if (curve.empty())
-	{
-		return;
-	}
-
-	for (size_t i = 0; i < curve.size(); ++i)
-	{
-		curve[i].T = safeNormalized(curve[i].T);
-	}
-
-	if (forcePlanarFrames)
-	{
-		for (size_t i = 0; i < curve.size(); ++i)
-		{
-			curve[i].B = Vector3f(0, 0, 1);
-			curve[i].N = Vector3f::cross(curve[i].B, curve[i].T).normalized();
-		}
-		return;
-	}
-
-	curve[0].B = chooseInitialBinormal(curve[0].T);
-	curve[0].N = Vector3f::cross(curve[0].B, curve[0].T).normalized();
-	curve[0].B = Vector3f::cross(curve[0].T, curve[0].N).normalized();
-
-	for (size_t i = 1; i < curve.size(); ++i)
-	{
-		Vector3f Bi = Vector3f::cross(curve[i].T, curve[i - 1].N);
-		if (isNearlyZero(Bi))
-		{
-			Bi = curve[i - 1].B;
-		}
-		else
-		{
-			Bi.normalize();
-		}
-
-		Vector3f Ni = Vector3f::cross(Bi, curve[i].T);
-		if (isNearlyZero(Ni))
-		{
-			Ni = curve[i - 1].N;
-		}
-		else
-		{
-			Ni.normalize();
-		}
-
-		curve[i].B = Vector3f::cross(curve[i].T, Ni).normalized();
-		curve[i].N = Vector3f::cross(curve[i].B, curve[i].T).normalized();
-	}
-
-	const bool isClosed =
-		curve.size() > 2 &&
-		approx(curve.front().V, curve.back().V) &&
-		clampDot(Vector3f::dot(curve.front().T, curve.back().T)) > 1.0f - 1e-4f;
-	if (!isClosed)
-	{
-		return;
-	}
-
-	const float alpha = signedAngleAroundAxis(curve.back().N, curve.front().N, curve.back().T);
-	if (fabs(alpha) < 1e-5f)
-	{
-		return;
-	}
-
-	for (size_t i = 0; i < curve.size(); ++i)
-	{
-		const float theta = alpha * static_cast<float>(i) / static_cast<float>(curve.size() - 1);
-		rotateFrameAroundTangent(curve[i], theta);
-	}
-}
-
-CurvePoint evalBezierPoint(const Vector3f& p0,
-						   const Vector3f& p1,
-						   const Vector3f& p2,
-						   const Vector3f& p3,
-						   float t)
-{
-	const float u = 1.0f - t;
-	const float b0 = u * u * u;
-	const float b1 = 3.0f * u * u * t;
-	const float b2 = 3.0f * u * t * t;
-	const float b3 = t * t * t;
-
-	CurvePoint cp;
-	cp.V = b0 * p0 + b1 * p1 + b2 * p2 + b3 * p3;
-	cp.T = 3.0f * u * u * (p1 - p0)
-	     + 6.0f * u * t * (p2 - p1)
-	     + 3.0f * t * t * (p3 - p2);
-	return cp;
-}
 
 }
 
@@ -180,48 +27,50 @@ Curve evalBezier(const vector< Vector3f >& P, unsigned steps)
 		exit(0);
 	}
 
-	// TODO:
-	// You should implement this function so that it returns a Curve
-	// (e.g., a vector< CurvePoint >).  The variable "steps" tells you
-	// the number of points to generate on each piece of the spline.
-	// At least, that's how the sample solution is implemented and how
-	// the SWP files are written.  But you are free to interpret this
-	// variable however you want, so long as you can control the
-	// "resolution" of the discretized spline curve with it.
+	unsigned segments = P.size() / 3;
+	
+	Curve R(segments * steps + 1);
 
-	// Make sure that this function computes all the appropriate
-	// Vector3fs for each CurvePoint: V,T,N,B.
-	// [NBT] should be unit and orthogonal.
+	const Matrix4f M(Vector4f( 1,  0,  0,  0),
+					 Vector4f(-3,  3,  0,  0),
+					 Vector4f( 3, -6,  3,  0),
+					 Vector4f(-1,  3, -3,  1));
 
-	// Also note that you may assume that all Bezier curves that you
-	// receive have G1 continuity.  Otherwise, the TNB will not be
-	// be defined at points where this does not hold.
-
-	const unsigned segments = (P.size() - 1) / 3;
-	Curve curve;
-	curve.reserve(segments * steps + 1);
-
-	for (unsigned seg = 0; seg < segments; ++seg)
+	float dt = 1.0 / steps;
+	for (unsigned i = 0; i < segments; ++i)
 	{
-		const Vector3f& p0 = P[3 * seg + 0];
-		const Vector3f& p1 = P[3 * seg + 1];
-		const Vector3f& p2 = P[3 * seg + 2];
-		const Vector3f& p3 = P[3 * seg + 3];
-
-		for (unsigned i = 0; i <= steps; ++i)
+		float t = 0;
+		Matrix4f G(Vector4f(P[i * 3], 0),
+				   Vector4f(P[i * 3 + 1], 0),
+				   Vector4f(P[i * 3 + 2], 0),
+				   Vector4f(P[i * 3 + 3], 0));
+		for (unsigned j = 0; j <= steps; ++j)
 		{
-			if (seg > 0 && i == 0)
+			if (i < segments - 1 && j == steps)
 			{
 				continue;
 			}
+			Vector4f T(1, t, t * t, t * t * t);
+			Vector4f dT(0, 1, 2 * t, 3 * t * t);
+			CurvePoint& Point = R[i * steps + j];
+			Point.V = (G * M * T).xyz();
+			Point.T = (G * M * dT).xyz().normalized();
+			if (i == 0 && j == 0)
+			{
+				Vector3f B0(0, 0, 1);
+				Point.N = Vector3f::cross(B0, Point.T).normalized();
+			}
+			else
+			{
+				Point.N = Vector3f::cross(R[i * steps + j - 1].B, Point.T).normalized();
+			}
+			Point.B = Vector3f::cross(Point.T, Point.N).normalized();
 
-			const float t = static_cast<float>(i) / static_cast<float>(steps);
-			curve.push_back(evalBezierPoint(p0, p1, p2, p3, t));
+			t += dt;
 		}
 	}
 
-	buildFrames(curve, isFlatXY(P));
-	return curve;
+	return R;
 }
 
 Curve evalBspline(const vector< Vector3f >& P, unsigned steps)
@@ -233,37 +82,65 @@ Curve evalBspline(const vector< Vector3f >& P, unsigned steps)
 		exit(0);
 	}
 
-	// TODO:
-	// It is suggested that you implement this function by changing
-	// basis from B-spline to Bezier.  That way, you can just call
-	// your evalBezier function.
+	Curve R;
+	R.reserve((P.size() - 3) * steps + 1);
 
-	vector<Vector3f> bezierCtrlPoints;
-	bezierCtrlPoints.reserve(3 * (P.size() - 3) + 1);
+	const Matrix4f M(Vector4f( 1,  4,  1,  0),
+					 Vector4f(-3,  0,  3,  0),
+					 Vector4f( 3, -6,  3,  0),
+					 Vector4f(-1,  3, -3,  1));
 
-	for (size_t i = 0; i + 3 < P.size(); ++i)
+	const Matrix4f Mbez_inv(Vector4f(3, 0, 0, 0),
+							Vector4f(3, 1, 0, 0),
+							Vector4f(3, 2, 1, 0),
+							Vector4f(3, 3, 3, 3));
+
+	for (unsigned i = 3; i < P.size(); ++i)
 	{
-		const Vector3f b0 = (P[i] + 4.0f * P[i + 1] + P[i + 2]) / 6.0f;
-		const Vector3f b1 = (4.0f * P[i + 1] + 2.0f * P[i + 2]) / 6.0f;
-		const Vector3f b2 = (2.0f * P[i + 1] + 4.0f * P[i + 2]) / 6.0f;
-		const Vector3f b3 = (P[i + 1] + 4.0f * P[i + 2] + P[i + 3]) / 6.0f;
+		Matrix4f G(Vector4f(P[i - 3], 0),
+				   Vector4f(P[i - 2], 0),
+				   Vector4f(P[i - 1], 0),
+				   Vector4f(P[i], 0));
+		
+		Matrix4f G_trans(G * M * Mbez_inv);
 
-		if (i == 0)
+		vector< Vector3f > P_trans(4);
+		P_trans[0] = G_trans.getCol(0).xyz() / 18.0f;
+		P_trans[1] = G_trans.getCol(1).xyz() / 18.0f;
+		P_trans[2] = G_trans.getCol(2).xyz() / 18.0f;
+		P_trans[3] = G_trans.getCol(3).xyz() / 18.0f;
+		
+		Curve seg = evalBezier(P_trans, steps);
+
+		if (i == P.size() - 1)
 		{
-			bezierCtrlPoints.push_back(b0);
-			bezierCtrlPoints.push_back(b1);
-			bezierCtrlPoints.push_back(b2);
-			bezierCtrlPoints.push_back(b3);
+			R.insert(R.end(), seg.begin(), seg.end());
 		}
 		else
 		{
-			bezierCtrlPoints.push_back(b1);
-			bezierCtrlPoints.push_back(b2);
-			bezierCtrlPoints.push_back(b3);
+			R.insert(R.end(), seg.begin(), seg.end() - 1);
 		}
 	}
 
-	return evalBezier(bezierCtrlPoints, steps);
+	// Since curve R is composed of separate B'ezier curves,
+	// re-calc N & B to make sure they're continuous
+	for (unsigned i = 0; i < R.size(); i++)
+	{
+		CurvePoint& Point = R[i];
+
+		if (i == 0)
+		{
+			Vector3f B0(0, 0, 1);
+			Point.N = Vector3f::cross(B0, Point.T).normalized();
+		}
+		else
+		{
+			Point.N = Vector3f::cross(R[i - 1].B, Point.T).normalized();
+		}
+		Point.B = Vector3f::cross(Point.T, Point.N).normalized();
+	}
+
+	return R;
 }
 
 Curve evalCircle(float radius, unsigned steps)
@@ -342,3 +219,4 @@ void recordCurveFrames(const Curve& curve, VertexRecorder* recorder, float frame
 		recorder->record_poscolor(MAXISZ.xyz(), BLUE);
 	}
 }
+

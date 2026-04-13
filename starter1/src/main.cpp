@@ -240,7 +240,7 @@ void updateLightUniforms(GLuint program)
 
 void drawSurface()
 {
-    const bool shaded = (gSurfaceMode == SURFACE_MODE_ACTIVE);
+    const bool shaded = true; // TODO add UI for this variable
     if (shaded) {
         // DRAW SHADED SURFACE
         glUseProgram(program_light);
@@ -260,14 +260,12 @@ void drawSurface()
         // DRAW SURFACE WIRE FRAME
         glUseProgram(program_color);
         camera.SetUniforms(program_color);
-        glDisable(GL_CULL_FACE);
 
         // don't shade polygon interior
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glLineWidth(1.5f);
+        glLineWidth(1);
     }
     recorders->surface.draw(GL_TRIANGLES);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // DRAW SURFACE NORMALS
     if (gSurfaceMode == SURFACE_MODE_WITH_NORMALS) {
