@@ -11,7 +11,6 @@
 - 基于控制点生成分段三次 **Bezier** 与三次 **B-spline** 曲线；
 - 为曲线上每个采样点建立 **Frenet-like 局部坐标系** `(T, N, B)`；
 - 以曲线为 profile/sweep，构造 **旋转曲面 (`makeSurfRev`)** 与 **广义圆柱面 (`makeGenCyl`)**；
-- 导出三角网格并可输出为 `.obj`。
 
 主要实现集中在 [starter1/src/curve.cpp](starter1/src/curve.cpp) 与 [starter1/src/surf.cpp](starter1/src/surf.cpp) 两个文件。
 
