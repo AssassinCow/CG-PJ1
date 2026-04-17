@@ -1,129 +1,92 @@
-# PJ1
+# 计算机图形学 Project 1
 
-本目录包含计算机图形学 PJ1 的说明文件与完成后的代码实现。
+本仓库为计算机图形学课程 Project 1 的实现与结果整理。项目基于课程提供的 `starter1` 框架完成，主要涵盖参数曲线生成、曲线局部坐标系计算，以及旋转曲面与扫掠曲面的构造。
 
-## 目录说明
+## 项目内容
 
-- `Project1说明.pptx`：课程提供的 PJ1 说明 PPT
-- `starter1/`：作业代码目录
-- `starter1/swp/`：样例输入文件
-- `starter1/build/a1`：编译后的可执行程序
-- `starter1/run_pj1.sh`：在当前 WSL/Ubuntu 环境下推荐使用的启动脚本
+本项目完成了以下核心功能：
 
-## 已完成内容
+- 分段三次 Bezier 曲线的生成与绘制
+- 三次 B-spline 曲线的生成与绘制
+- 曲线局部坐标系 `T / N / B` 的计算与可视化
+- 旋转曲面 `makeSurfRev` 的构造
+- 广义圆柱面 `makeGenCyl` 的构造
 
-已根据 PPT 要求完成以下任务：
+## 开发环境
 
-- 分段三次 Bezier 曲线绘制
-- 三次 B-spline 曲线绘制
-- 曲线局部坐标系 `T / N / B` 计算
-- 旋转曲面 `makeSurfRev`
-- 广义圆柱面 `makeGenCyl`
-- 闭合扫掠曲线的首尾法向插值修正
-- WSL 下的构建与运行适配
+项目构建与运行依赖以下环境：
 
-主要实现文件：
+- `CMake`
+- 支持 OpenGL 的 C++ 编译环境
+- `Linux`、`WSL` 或 `macOS`
 
-- `starter1/src/curve.cpp`
-- `starter1/src/surf.cpp`
+## 构建说明
 
-## 构建方法
-
-在项目根目录执行：
+在仓库根目录执行以下命令完成编译：
 
 ```bash
-cd /home/lzx/my_workspace/CG/PJ1
 cmake -S starter1 -B starter1/build
 cmake --build starter1/build -j4
 ```
 
-## 运行方法
+编译完成后，将在 `starter1/build/` 目录下生成可执行文件 `a1`。
 
-推荐使用封装好的脚本：
+## 运行说明
+
+推荐通过封装脚本运行程序：
 
 ```bash
-cd /home/lzx/my_workspace/CG/PJ1
 starter1/run_pj1.sh starter1/swp/core.swp
 ```
 
-也可以直接运行可执行文件：
+也可直接执行编译产物：
 
 ```bash
 starter1/build/a1 starter1/swp/core.swp
 ```
 
-若需要导出 OBJ：
+如需导出 OBJ 模型，可执行：
 
 ```bash
 starter1/run_pj1.sh starter1/swp/weirder.swp /tmp/pj1_out
 ```
 
-会生成类似：
+## 样例输入与结果截图
 
-```bash
-/tmp/pj1_out_weirder.obj
-```
+`starter1/swp/` 目录中包含课程提供的测试样例，`results/` 目录中保存了对应的运行结果截图。为便于检索与归档，结果图片均已按照样例名称统一命名。
 
-## 推荐检查样例
+| 样例文件 | 内容说明 | 结果截图 |
+| --- | --- | --- |
+| `circles.swp` | 二维圆曲线样例 | `results/result-circles.png` |
+| `core.swp` | 曲线与局部坐标系基础样例 | `results/result-core.png` |
+| `flircle.swp` | 广义圆柱面样例 | `results/result-flircle.png` |
+| `florus.swp` | 花形扫掠曲面样例 | `results/result-florus.png` |
+| `gentorus.swp` | 环形扫掠曲面样例 | `results/result-gentorus.png` |
+| `norm.swp` | 旋转曲面法向效果样例 | `results/result-norm.png` |
+| `tor.swp` | 基础环面扫掠样例 | `results/result-tor.png` |
+| `weird.swp` | 一般扫掠曲面样例 | `results/result-weird.png` |
+| `weirder.swp` | 闭合扫掠曲面样例 | `results/result-weirder.png` |
+| `wineglass.swp` | 酒杯旋转曲面样例 | `results/result-wineglass.png` |
 
-建议至少运行以下样例做验收：
+## 目录说明
 
-```bash
-starter1/run_pj1.sh starter1/swp/core.swp
-starter1/run_pj1.sh starter1/swp/weird.swp
-starter1/run_pj1.sh starter1/swp/weirder.swp
-starter1/run_pj1.sh starter1/swp/wineglass.swp
-```
+- `Project1说明.pptx`：课程作业说明文档
+- `starter1/src/`：项目核心源代码
+- `starter1/swp/`：输入样例文件
+- `results/`：运行结果截图
+- `starter1/run_pj1.sh`：项目运行脚本
+- `starter1/build/`：编译输出目录
 
-含义如下：
+## 主要实现文件
 
-- `core.swp`：检查曲线与局部坐标系
-- `weird.swp`：检查广义圆柱
-- `weirder.swp`：检查闭合修正
-- `wineglass.swp`：检查旋转曲面
+- `starter1/src/curve.cpp`
+- `starter1/src/surf.cpp`
 
-## 交互按键
+## 交互方式
+
+程序运行后的主要交互按键如下：
 
 - `c`：切换曲线局部坐标系显示
 - `p`：切换控制点显示
 - `s`：切换曲面显示模式
-- 空格：重置视角
-
-鼠标可用于旋转、缩放和平移视角。
-
-## WSL 图形说明
-
-当前环境为 WSL Ubuntu。若窗口无法打开，通常不是代码问题，而是 WSL 图形会话未接通。
-
-可按如下方式处理：
-
-1. 在 Windows PowerShell 中执行：
-
-```powershell
-wsl --shutdown
-```
-
-2. 重新打开 Ubuntu
-3. 再次运行：
-
-```bash
-cd /home/lzx/my_workspace/CG/PJ1
-starter1/run_pj1.sh starter1/swp/core.swp
-```
-
-`starter1/run_pj1.sh` 会优先按 WSLg 环境启动，并在图形环境不可用时给出提示。
-
-## 当前完成状态
-
-代码任务已完成，并已完成以下验证：
-
-- 工程可成功编译
-- 多个 `swp` 样例可正常导出 OBJ
-- 导出的顶点和法线无 `NaN/Inf`
-- `weirder.swp` 的闭合接缝已修正
-
-## 提交前还需要做的事
-
-- 逐个运行样例并截图
-- 撰写 PJ1 报告
-- 将 `starter1/` 与报告 PDF 一并打包提交
+- `Space`：重置视角
